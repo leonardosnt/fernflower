@@ -279,7 +279,7 @@ public class ClassWriter {
     boolean isInterface = (flags & CodeConstants.ACC_INTERFACE) != 0;
     boolean isAnnotation = (flags & CodeConstants.ACC_ANNOTATION) != 0;
 
-    if (isDeprecated) {
+    if (isDeprecated && !hasDeprecatedAnnotation(cl)) {
       appendDeprecation(buffer, indent);
     }
 
@@ -362,13 +362,23 @@ public class ClassWriter {
     buffer.append('{').appendLineSeparator();
   }
 
+  private static boolean hasDeprecatedAnnotation(StructMember member) {
+    StructAnnotationAttribute attr = member.getAttribute(StructGeneralAttribute.ATTRIBUTE_RUNTIME_VISIBLE_ANNOTATIONS);
+
+    for (AnnotationExprent annotation : attr.getAnnotations()) {
+      if ("java/lang/Deprecated".equals(annotation.getClassName())) return true;
+    }
+
+    return false;
+  }
+
   private void fieldToJava(ClassWrapper wrapper, StructClass cl, StructField fd, TextBuffer buffer, int indent, BytecodeMappingTracer tracer) {
     int start = buffer.length();
     boolean isInterface = cl.hasModifier(CodeConstants.ACC_INTERFACE);
     boolean isDeprecated = fd.hasAttribute(StructGeneralAttribute.ATTRIBUTE_DEPRECATED);
     boolean isEnum = fd.hasModifier(CodeConstants.ACC_ENUM) && DecompilerContext.getOption(IFernflowerPreferences.DECOMPILE_ENUM);
 
-    if (isDeprecated) {
+    if (isDeprecated && !hasDeprecatedAnnotation(fd)) {
       appendDeprecation(buffer, indent);
     }
 
@@ -591,7 +601,7 @@ public class ClassWriter {
         flags &= CodeConstants.ACC_STATIC; // ignore all modifiers except 'static' in a static initializer
       }
 
-      if (isDeprecated) {
+      if (isDeprecated && !hasDeprecatedAnnotation(mt)) {
         appendDeprecation(buffer, indent);
       }
 
