@@ -365,8 +365,10 @@ public class ClassWriter {
   private static boolean hasDeprecatedAnnotation(StructMember member) {
     StructAnnotationAttribute attr = member.getAttribute(StructGeneralAttribute.ATTRIBUTE_RUNTIME_VISIBLE_ANNOTATIONS);
 
-    for (AnnotationExprent annotation : attr.getAnnotations()) {
-      if ("java/lang/Deprecated".equals(annotation.getClassName())) return true;
+    if (attr != null) {
+      for (AnnotationExprent annotation : attr.getAnnotations()) {
+        if ("java/lang/Deprecated".equals(annotation.getClassName())) return true;
+      }
     }
 
     return false;
