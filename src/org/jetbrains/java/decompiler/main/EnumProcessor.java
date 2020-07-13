@@ -17,6 +17,10 @@ public class EnumProcessor {
   public static void clearEnum(ClassWrapper wrapper) {
     StructClass cl = wrapper.getClassStruct();
 
+    String valuesMethodDescriptor = "()[L" + cl.qualifiedName + ";";
+    String valueOfMethodDescriptor = "(Ljava/lang/String;)L" + cl.qualifiedName + ";";
+    String valuesFieldDescriptor = "[L" + cl.qualifiedName + ";";
+
     // hide values/valueOf methods and super() invocations
     for (MethodWrapper method : wrapper.getMethods()) {
       StructMethod mt = method.methodStruct;
@@ -24,12 +28,12 @@ public class EnumProcessor {
       String descriptor = mt.getDescriptor();
 
       if ("values".equals(name)) {
-        if (descriptor.equals("()[L" + cl.qualifiedName + ";")) {
+        if (descriptor.equals(valuesMethodDescriptor)) {
           wrapper.getHiddenMembers().add(InterpreterUtil.makeUniqueKey(name, descriptor));
         }
       }
       else if ("valueOf".equals(name)) {
-        if (descriptor.equals("(Ljava/lang/String;)L" + cl.qualifiedName + ";")) {
+        if (descriptor.equals(valueOfMethodDescriptor)) {
           wrapper.getHiddenMembers().add(InterpreterUtil.makeUniqueKey(name, descriptor));
         }
       }
@@ -50,7 +54,7 @@ public class EnumProcessor {
     // hide synthetic fields of enum and it's constants
     for (StructField fd : cl.getFields()) {
       String descriptor = fd.getDescriptor();
-      if (fd.isSynthetic() && descriptor.equals("[L" + cl.qualifiedName + ";")) {
+      if (fd.isSynthetic() && descriptor.equals(valuesFieldDescriptor)) {
         wrapper.getHiddenMembers().add(InterpreterUtil.makeUniqueKey(fd.getName(), descriptor));
       }
     }
