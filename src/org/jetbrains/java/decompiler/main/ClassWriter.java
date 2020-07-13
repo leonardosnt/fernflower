@@ -162,6 +162,7 @@ public class ClassWriter {
 
       dummy_tracer.incrementCurrentSourceLine(buffer.countLines(start_class_def));
 
+      List<StructField> nonEnumFields = null;
       for (StructField fd : cl.getFields()) {
         boolean hide = fd.isSynthetic() && DecompilerContext.getOption(IFernflowerPreferences.REMOVE_SYNTHETIC) ||
                        wrapper.getHiddenMembers().contains(InterpreterUtil.makeUniqueKey(fd.getName(), fd.getDescriptor()));
@@ -176,11 +177,11 @@ public class ClassWriter {
           enumFields = true;
         }
         else if (enumFields) {
-          buffer.append(';');
-          buffer.appendLineSeparator();
-          buffer.appendLineSeparator();
-          dummy_tracer.incrementCurrentSourceLine(2);
-          enumFields = false;
+          // Found a non-enum field while writing enum fields, 'delay' it for later.
+          if (nonEnumFields == null)
+            nonEnumFields = new ArrayList<>();
+          nonEnumFields.add(fd);
+          continue;
         }
 
         fieldToJava(wrapper, cl, fd, buffer, indent + 1, dummy_tracer); // FIXME: insert real tracer
@@ -191,6 +192,18 @@ public class ClassWriter {
       if (enumFields) {
         buffer.append(';').appendLineSeparator();
         dummy_tracer.incrementCurrentSourceLine();
+
+        if (nonEnumFields != null) {
+          buffer.appendLineSeparator();
+          dummy_tracer.incrementCurrentSourceLine(1);
+        }
+      }
+
+      // Write 'delayed' non-enum fields
+      if (nonEnumFields != null) {
+        for (StructField fd : nonEnumFields) {
+          fieldToJava(wrapper, cl, fd, buffer, indent + 1, dummy_tracer); // FIXME: insert real tracer
+        }
       }
 
       // FIXME: fields don't matter at the moment
